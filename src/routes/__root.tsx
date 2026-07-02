@@ -77,14 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "НОРМ — Структура процессов" },
+      { title: "Структура процессов" },
       {
         name: "description",
         content:
           "Редактор иерархической структуры процессов организации: добавление, перемещение уровней, переименование, активация и деактивация элементов.",
       },
       { name: "author", content: "НОРМ" },
-      { property: "og:title", content: "НОРМ — Структура процессов" },
+      { property: "og:title", content: "Структура процессов" },
       {
         property: "og:description",
         content:
@@ -93,6 +93,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Структура процессов" },
+      { name: "description", content: "Edit and manage hierarchical process structures with a visual tree editor." },
+      { property: "og:description", content: "Edit and manage hierarchical process structures with a visual tree editor." },
+      { name: "twitter:description", content: "Edit and manage hierarchical process structures with a visual tree editor." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/aa7bd387-152f-4044-93d9-187a260a7eec/id-preview-34e77202--8dc75512-68d4-4842-983b-5268f2a97d79.lovable.app-1782990760164.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/aa7bd387-152f-4044-93d9-187a260a7eec/id-preview-34e77202--8dc75512-68d4-4842-983b-5268f2a97d79.lovable.app-1782990760164.png" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
