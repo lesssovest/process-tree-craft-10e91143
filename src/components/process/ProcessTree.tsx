@@ -557,7 +557,10 @@ function IconBtn({
       type="button"
       title={title}
       aria-label={title}
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
       className={cn(
         "flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors",
         danger ? "hover:bg-destructive/10 hover:text-destructive" : "hover:bg-accent hover:text-foreground",
