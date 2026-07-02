@@ -88,6 +88,7 @@ export function ProcessTree() {
   const [savedSnapshot, setSavedSnapshot] = useState<string>(() => JSON.stringify(seedProcesses));
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(collectAllIds(seedProcesses)));
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [drag, setDrag] = useState<DragState | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
