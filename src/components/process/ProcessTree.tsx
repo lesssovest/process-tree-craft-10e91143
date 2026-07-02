@@ -493,7 +493,12 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
 
         {/* actions */}
         {!isEditing && (
-          <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+          <div
+            className={cn(
+              "flex shrink-0 items-center gap-0.5 transition-opacity group-hover:opacity-100 focus-within:opacity-100",
+              isSelected ? "opacity-100" : "opacity-0",
+            )}
+          >
             <IconBtn title="Редактировать название" onClick={() => h.startEdit(node.id)}>
               <Pencil className="size-3.5" />
             </IconBtn>
