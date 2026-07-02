@@ -451,7 +451,10 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
         {/* expander */}
         <button
           type="button"
-          onClick={() => hasChildren && h.toggleExpand(node.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (hasChildren) h.toggleExpand(node.id);
+          }}
           className={cn(
             "flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground",
             hasChildren ? "hover:bg-accent hover:text-foreground" : "invisible",
