@@ -117,6 +117,8 @@ export function ProcessTree() {
   const expandAll = () => setExpanded(new Set(collectAllIds(nodes)));
   const collapseAll = () => setExpanded(new Set());
 
+  const select = (id: string) => setSelectedId((prev) => (prev === id ? null : id));
+
   const startEdit = (id: string) => setEditingId(id);
   const cancelEdit = () => {
     // discard an empty freshly-added node
