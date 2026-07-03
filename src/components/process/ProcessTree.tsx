@@ -463,9 +463,6 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
             >
               {node.active ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
             </IconBtn>
-            <IconBtn title="Удалить" danger onClick={() => h.requestDelete(node.id)}>
-              <Trash2 className="size-3.5" />
-            </IconBtn>
           </div>
         )}
       </div>
