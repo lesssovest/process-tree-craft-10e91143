@@ -65,7 +65,6 @@ interface RowHandlers {
   moveVert: (id: string, dir: -1 | 1) => void;
   promote: (id: string) => void;
   demote: (id: string) => void;
-  requestDelete: (id: string) => void;
   onDragStart: (id: string) => void;
   onDragOver: (id: string, e: React.DragEvent, hasChildren: boolean) => void;
   onDrop: (id: string) => void;
@@ -81,7 +80,6 @@ export function ProcessTree() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [drag, setDrag] = useState<DragState | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
   const newlyAddedId = useRef<string | null>(null);
 
   const dirty = JSON.stringify(nodes) !== savedSnapshot;
@@ -160,7 +158,7 @@ export function ProcessTree() {
   };
 
   const toggleActive = (id: string) => {
-    setNodes((prev) => updateTree(prev, id, (n) => ({ ...n, active: !n.active })));
+    setNodes((prev) => toggleActiveCascade(prev, id));
   };
 
   const moveVert = (id: string, dir: -1 | 1) => setNodes((prev) => moveNode(prev, id, dir));
@@ -192,23 +190,6 @@ export function ProcessTree() {
     }
     setNodes((prev) => demoteNode(prev, id));
     setExpanded((prev) => new Set(prev).add(meta.prevSiblingId!));
-  };
-
-  const requestDelete = (id: string) => {
-    const node = findNode(nodes, id);
-    if (node && node.children.length === 0) {
-      setNodes((prev) => removeFromTree(prev, id).tree);
-      toast.success("Элемент удалён");
-      return;
-    }
-    setDeleteId(id);
-  };
-
-  const confirmDelete = () => {
-    if (!deleteId) return;
-    setNodes((prev) => removeFromTree(prev, deleteId).tree);
-    setDeleteId(null);
-    toast.success("Элемент удалён вместе с подпроцессами");
   };
 
   // ---- Drag & drop ----
