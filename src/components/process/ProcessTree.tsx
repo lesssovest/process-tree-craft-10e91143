@@ -272,16 +272,12 @@ export function ProcessTree() {
     moveVert,
     promote,
     demote,
-    requestDelete,
     onDragStart,
     onDragOver,
     onDrop,
     onDragEnd,
     nodes,
   };
-
-  const deleteNode = deleteId ? findNode(nodes, deleteId) : null;
-  const deleteChildCount = deleteNode ? countNodes(deleteNode.children) : 0;
 
   return (
     <div className="flex flex-col gap-5">
