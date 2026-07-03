@@ -56,9 +56,6 @@ interface RowHandlers {
   cancelEdit: () => void;
   addChild: (id: string) => void;
   toggleActive: (id: string) => void;
-  moveVert: (id: string, dir: -1 | 1) => void;
-  promote: (id: string) => void;
-  demote: (id: string) => void;
   onDragStart: (id: string) => void;
   onDragOver: (id: string, e: React.DragEvent, hasChildren: boolean) => void;
   onDrop: (id: string) => void;
@@ -155,36 +152,6 @@ export function ProcessTree() {
     setNodes((prev) => toggleActiveCascade(prev, id));
   };
 
-  const moveVert = (id: string, dir: -1 | 1) => setNodes((prev) => moveNode(prev, id, dir));
-
-  const promote = (id: string) => {
-    const meta = getMeta(nodes, id);
-    if (!meta || meta.parentId === null) {
-      toast.info("Элемент уже на корневом уровне");
-      return;
-    }
-    setNodes((prev) => promoteNode(prev, id));
-  };
-
-  const demote = (id: string) => {
-    const meta = getMeta(nodes, id);
-    if (!meta || meta.prevSiblingId === null) {
-      toast.info("Нет элемента, в который можно вложить");
-      return;
-    }
-    const target = findNode(nodes, meta.prevSiblingId)!;
-    const node = findNode(nodes, id)!;
-    if (depthOf(nodes, target.id) + 1 + heightOf(node) > MAX_DEPTH) {
-      toast.error(`Достигнута максимальная глубина вложенности (${MAX_DEPTH} уровней)`);
-      return;
-    }
-    if (hasDuplicateSibling(target.children, node.name)) {
-      toast.error("Элемент с таким названием уже есть на этом уровне");
-      return;
-    }
-    setNodes((prev) => demoteNode(prev, id));
-    setExpanded((prev) => new Set(prev).add(meta.prevSiblingId!));
-  };
 
   // ---- Drag & drop ----
   const onDragStart = (id: string) => setDrag({ dragId: id, overId: null, position: null });
