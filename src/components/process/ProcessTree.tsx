@@ -331,33 +331,6 @@ export function ProcessTree() {
         Всего процессов: {countNodes(nodes)} · Максимальная глубина: {MAX_DEPTH} уровней. Перетащите
         элемент, чтобы изменить порядок или уровень вложенности.
       </p>
-
-      <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Удалить процесс?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteChildCount > 0 ? (
-                <>
-                  «{deleteNode?.name}» содержит {deleteChildCount} вложенны{deleteChildCount === 1 ? "й элемент" : "х элементов"}.
-                  Удалить вместе с подпроцессами? Действие нельзя отменить.
-                </>
-              ) : (
-                <>Удалить «{deleteNode?.name}»? Действие нельзя отменить.</>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Удалить
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
