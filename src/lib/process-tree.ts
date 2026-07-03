@@ -189,6 +189,24 @@ export function collectAllIds(nodes: ProcessNode[], acc: string[] = []): string[
   return acc;
 }
 
+/** Recursively set the `active` flag on a subtree (a node and all descendants). */
+function setSubtreeActive(node: ProcessNode, active: boolean): ProcessNode {
+  return { ...node, active, children: node.children.map((c) => setSubtreeActive(c, active)) };
+}
+
+/**
+ * Toggle a node's active state. Deactivating a node also deactivates all of its
+ * descendants; activating a node only affects the node itself.
+ */
+export function toggleActiveCascade(nodes: ProcessNode[], id: string): ProcessNode[] {
+  const node = findNode(nodes, id);
+  if (!node) return nodes;
+  const nextActive = !node.active;
+  return updateTree(nodes, id, (n) =>
+    nextActive ? { ...n, active: true } : setSubtreeActive(n, false),
+  );
+}
+
 export function countNodes(nodes: ProcessNode[]): number {
   return nodes.reduce((sum, n) => sum + 1 + countNodes(n.children), 0);
 }
