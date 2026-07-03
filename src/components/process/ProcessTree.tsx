@@ -7,7 +7,6 @@ import {
   ArrowUp,
   ArrowDown,
   ChevronLeft,
-  Trash2,
   Check,
   X,
   GripVertical,
@@ -18,16 +17,6 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import {
   MAX_DEPTH,
@@ -49,6 +38,7 @@ import {
   removeFromTree,
   searchMatches,
   seedProcesses,
+  toggleActiveCascade,
   updateTree,
 } from "@/lib/process-tree";
 
