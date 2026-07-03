@@ -7,7 +7,6 @@ import {
   ArrowUp,
   ArrowDown,
   ChevronLeft,
-  Trash2,
   Check,
   X,
   GripVertical,
@@ -18,16 +17,6 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import {
   MAX_DEPTH,
@@ -49,6 +38,7 @@ import {
   removeFromTree,
   searchMatches,
   seedProcesses,
+  toggleActiveCascade,
   updateTree,
 } from "@/lib/process-tree";
 
@@ -75,7 +65,6 @@ interface RowHandlers {
   moveVert: (id: string, dir: -1 | 1) => void;
   promote: (id: string) => void;
   demote: (id: string) => void;
-  requestDelete: (id: string) => void;
   onDragStart: (id: string) => void;
   onDragOver: (id: string, e: React.DragEvent, hasChildren: boolean) => void;
   onDrop: (id: string) => void;
@@ -91,7 +80,6 @@ export function ProcessTree() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [drag, setDrag] = useState<DragState | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
   const newlyAddedId = useRef<string | null>(null);
 
   const dirty = JSON.stringify(nodes) !== savedSnapshot;
@@ -170,7 +158,7 @@ export function ProcessTree() {
   };
 
   const toggleActive = (id: string) => {
-    setNodes((prev) => updateTree(prev, id, (n) => ({ ...n, active: !n.active })));
+    setNodes((prev) => toggleActiveCascade(prev, id));
   };
 
   const moveVert = (id: string, dir: -1 | 1) => setNodes((prev) => moveNode(prev, id, dir));
@@ -202,23 +190,6 @@ export function ProcessTree() {
     }
     setNodes((prev) => demoteNode(prev, id));
     setExpanded((prev) => new Set(prev).add(meta.prevSiblingId!));
-  };
-
-  const requestDelete = (id: string) => {
-    const node = findNode(nodes, id);
-    if (node && node.children.length === 0) {
-      setNodes((prev) => removeFromTree(prev, id).tree);
-      toast.success("Элемент удалён");
-      return;
-    }
-    setDeleteId(id);
-  };
-
-  const confirmDelete = () => {
-    if (!deleteId) return;
-    setNodes((prev) => removeFromTree(prev, deleteId).tree);
-    setDeleteId(null);
-    toast.success("Элемент удалён вместе с подпроцессами");
   };
 
   // ---- Drag & drop ----
@@ -301,16 +272,12 @@ export function ProcessTree() {
     moveVert,
     promote,
     demote,
-    requestDelete,
     onDragStart,
     onDragOver,
     onDrop,
     onDragEnd,
     nodes,
   };
-
-  const deleteNode = deleteId ? findNode(nodes, deleteId) : null;
-  const deleteChildCount = deleteNode ? countNodes(deleteNode.children) : 0;
 
   return (
     <div className="flex flex-col gap-5">
@@ -364,33 +331,6 @@ export function ProcessTree() {
         Всего процессов: {countNodes(nodes)} · Максимальная глубина: {MAX_DEPTH} уровней. Перетащите
         элемент, чтобы изменить порядок или уровень вложенности.
       </p>
-
-      <AlertDialog open={deleteId !== null} onOpenChange={(o) => !o && setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Удалить процесс?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteChildCount > 0 ? (
-                <>
-                  «{deleteNode?.name}» содержит {deleteChildCount} вложенны{deleteChildCount === 1 ? "й элемент" : "х элементов"}.
-                  Удалить вместе с подпроцессами? Действие нельзя отменить.
-                </>
-              ) : (
-                <>Удалить «{deleteNode?.name}»? Действие нельзя отменить.</>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Удалить
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
@@ -522,9 +462,6 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
               onClick={() => h.toggleActive(node.id)}
             >
               {node.active ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-            </IconBtn>
-            <IconBtn title="Удалить" danger onClick={() => h.requestDelete(node.id)}>
-              <Trash2 className="size-3.5" />
             </IconBtn>
           </div>
         )}

@@ -23,11 +23,6 @@ function Index() {
 
           <header className="mb-7">
             <h1 className="text-2xl font-bold tracking-tight">Структура процессов</h1>
-            <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
-              Управляйте иерархией процессов вашей организации. Эти процессы доступны для выбора при
-              регистрации инцидентов. Добавляйте, перемещайте и деактивируйте элементы — структура
-              может содержать несколько уровней вложенности.
-            </p>
           </header>
 
           <ProcessTree />
