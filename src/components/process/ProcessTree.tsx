@@ -403,18 +403,6 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
             <IconBtn title="Добавить дочерний" onClick={() => h.addChild(node.id)}>
               <Plus className="size-3.5" />
             </IconBtn>
-            <IconBtn title="Переместить вверх" onClick={() => h.moveVert(node.id, -1)}>
-              <ArrowUp className="size-3.5" />
-            </IconBtn>
-            <IconBtn title="Переместить вниз" onClick={() => h.moveVert(node.id, 1)}>
-              <ArrowDown className="size-3.5" />
-            </IconBtn>
-            <IconBtn title="Повысить уровень" onClick={() => h.promote(node.id)}>
-              <ChevronLeft className="size-3.5" />
-            </IconBtn>
-            <IconBtn title="Понизить уровень" onClick={() => h.demote(node.id)}>
-              <ChevronRight className="size-3.5" />
-            </IconBtn>
             <IconBtn
               title={node.active ? "Деактивировать" : "Активировать"}
               onClick={() => h.toggleActive(node.id)}
