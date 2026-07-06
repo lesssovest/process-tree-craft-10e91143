@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -9,6 +9,7 @@ import {
   GripVertical,
   Eye,
   EyeOff,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,6 +23,7 @@ import {
   collectAllIds,
   countNodes,
   depthOf,
+  diffChangedIds,
   findNode,
   getMeta,
   hasDuplicateSibling,
@@ -56,6 +58,10 @@ interface RowHandlers {
   cancelEdit: () => void;
   addChild: (id: string) => void;
   toggleActive: (id: string) => void;
+  deleteNode: (id: string) => void;
+  savedIds: Set<string>;
+  changedIds: Set<string>;
+  hideInactive: boolean;
   onDragStart: (id: string) => void;
   onDragOver: (id: string, e: React.DragEvent, hasChildren: boolean) => void;
   onDrop: (id: string) => void;
@@ -71,9 +77,26 @@ export function ProcessTree() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [drag, setDrag] = useState<DragState | null>(null);
+  const [hideInactive, setHideInactive] = useState(false);
+  const [changedIds, setChangedIds] = useState<Set<string>>(() => new Set());
   const newlyAddedId = useRef<string | null>(null);
 
   const dirty = JSON.stringify(nodes) !== savedSnapshot;
+
+  // Ids present in the last saved snapshot. Nodes not in this set are unsaved
+  // (freshly created) and may be deleted; saved nodes can only be deactivated.
+  const savedIds = useMemo(() => {
+    try {
+      return new Set(collectAllIds(JSON.parse(savedSnapshot) as ProcessNode[]));
+    } catch {
+      return new Set<string>();
+    }
+  }, [savedSnapshot]);
+
+  // Clear the post-save highlight as soon as the user makes new changes.
+  useEffect(() => {
+    if (dirty) setChangedIds((prev) => (prev.size ? new Set() : prev));
+  }, [dirty]);
 
   const { matched, searchExpand } = useMemo(() => {
     if (!query.trim()) return { matched: new Set<string>(), searchExpand: new Set<string>() };
@@ -152,6 +175,12 @@ export function ProcessTree() {
     setNodes((prev) => toggleActiveCascade(prev, id));
   };
 
+  const deleteNode = (id: string) => {
+    setNodes((prev) => removeFromTree(prev, id).tree);
+    if (selectedId === id) setSelectedId(null);
+    if (editingId === id) setEditingId(null);
+  };
+
 
   // ---- Drag & drop ----
   const onDragStart = (id: string) => setDrag({ dragId: id, overId: null, position: null });
@@ -210,7 +239,9 @@ export function ProcessTree() {
   const onDragEnd = () => setDrag(null);
 
   const save = () => {
+    const changed = diffChangedIds(JSON.parse(savedSnapshot) as ProcessNode[], nodes);
     setSavedSnapshot(JSON.stringify(nodes));
+    setChangedIds(changed);
     toast.success("Изменения сохранены", {
       description: `${countNodes(nodes)} процессов в структуре`,
     });
@@ -230,6 +261,10 @@ export function ProcessTree() {
     cancelEdit,
     addChild,
     toggleActive,
+    deleteNode,
+    savedIds,
+    changedIds,
+    hideInactive,
     onDragStart,
     onDragOver,
     onDrop,
@@ -253,6 +288,15 @@ export function ProcessTree() {
             Свернуть всё
           </Button>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setHideInactive((v) => !v)}
+          className="gap-2"
+        >
+          {hideInactive ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+          {hideInactive ? "Показать неактивные" : "Скрыть неактивные"}
+        </Button>
         <div className="relative min-w-[220px] flex-1">
           <Input
             value={query}
@@ -278,9 +322,11 @@ export function ProcessTree() {
           </div>
         ) : (
           <ul className="flex flex-col">
-            {nodes.map((n) => (
-              <TreeRow key={n.id} node={n} depth={0} h={handlers} />
-            ))}
+            {nodes
+              .filter((n) => !hideInactive || n.active)
+              .map((n) => (
+                <TreeRow key={n.id} node={n} depth={0} h={handlers} />
+              ))}
           </ul>
         )}
       </div>
@@ -302,6 +348,8 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
   const isOver = h.drag?.overId === node.id;
   const dropPos = isOver ? h.drag?.position : null;
   const isSelected = h.selectedId === node.id;
+  const isNew = !h.savedIds.has(node.id);
+  const isChanged = h.changedIds.has(node.id);
 
   return (
     <li>
@@ -323,6 +371,7 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
           "group relative flex cursor-pointer items-center gap-1 rounded-lg py-1.5 pr-2 transition-colors",
           "hover:bg-accent/50",
           isSelected && "bg-accent ring-1 ring-primary/40",
+          isChanged && !isSelected && "bg-primary/10 ring-1 ring-primary/30",
           isDragging && "opacity-40",
           dropPos === "inside" && "bg-accent ring-1 ring-primary/40",
         )}
@@ -403,21 +452,29 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
             <IconBtn title="Добавить дочерний" onClick={() => h.addChild(node.id)}>
               <Plus className="size-3.5" />
             </IconBtn>
-            <IconBtn
-              title={node.active ? "Деактивировать" : "Активировать"}
-              onClick={() => h.toggleActive(node.id)}
-            >
-              {node.active ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-            </IconBtn>
+            {isNew ? (
+              <IconBtn title="Удалить" danger onClick={() => h.deleteNode(node.id)}>
+                <Trash2 className="size-3.5" />
+              </IconBtn>
+            ) : (
+              <IconBtn
+                title={node.active ? "Деактивировать" : "Активировать"}
+                onClick={() => h.toggleActive(node.id)}
+              >
+                {node.active ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+              </IconBtn>
+            )}
           </div>
         )}
       </div>
 
       {hasChildren && isOpen && (
         <ul className="flex flex-col">
-          {node.children.map((c) => (
-            <TreeRow key={c.id} node={c} depth={depth + 1} h={h} />
-          ))}
+          {node.children
+            .filter((c) => !h.hideInactive || c.active)
+            .map((c) => (
+              <TreeRow key={c.id} node={c} depth={depth + 1} h={h} />
+            ))}
         </ul>
       )}
     </li>
