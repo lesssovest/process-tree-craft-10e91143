@@ -239,7 +239,9 @@ export function ProcessTree() {
   const onDragEnd = () => setDrag(null);
 
   const save = () => {
+    const changed = diffChangedIds(JSON.parse(savedSnapshot) as ProcessNode[], nodes);
     setSavedSnapshot(JSON.stringify(nodes));
+    setChangedIds(changed);
     toast.success("Изменения сохранены", {
       description: `${countNodes(nodes)} процессов в структуре`,
     });
@@ -259,6 +261,10 @@ export function ProcessTree() {
     cancelEdit,
     addChild,
     toggleActive,
+    deleteNode,
+    savedIds,
+    changedIds,
+    hideInactive,
     onDragStart,
     onDragOver,
     onDrop,
