@@ -77,9 +77,26 @@ export function ProcessTree() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [drag, setDrag] = useState<DragState | null>(null);
+  const [hideInactive, setHideInactive] = useState(false);
+  const [changedIds, setChangedIds] = useState<Set<string>>(() => new Set());
   const newlyAddedId = useRef<string | null>(null);
 
   const dirty = JSON.stringify(nodes) !== savedSnapshot;
+
+  // Ids present in the last saved snapshot. Nodes not in this set are unsaved
+  // (freshly created) and may be deleted; saved nodes can only be deactivated.
+  const savedIds = useMemo(() => {
+    try {
+      return new Set(collectAllIds(JSON.parse(savedSnapshot) as ProcessNode[]));
+    } catch {
+      return new Set<string>();
+    }
+  }, [savedSnapshot]);
+
+  // Clear the post-save highlight as soon as the user makes new changes.
+  useEffect(() => {
+    if (dirty) setChangedIds((prev) => (prev.size ? new Set() : prev));
+  }, [dirty]);
 
   const { matched, searchExpand } = useMemo(() => {
     if (!query.trim()) return { matched: new Set<string>(), searchExpand: new Set<string>() };
