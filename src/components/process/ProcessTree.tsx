@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -9,6 +9,7 @@ import {
   GripVertical,
   Eye,
   EyeOff,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,6 +23,7 @@ import {
   collectAllIds,
   countNodes,
   depthOf,
+  diffChangedIds,
   findNode,
   getMeta,
   hasDuplicateSibling,
