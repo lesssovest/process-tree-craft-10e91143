@@ -58,6 +58,10 @@ interface RowHandlers {
   cancelEdit: () => void;
   addChild: (id: string) => void;
   toggleActive: (id: string) => void;
+  deleteNode: (id: string) => void;
+  savedIds: Set<string>;
+  changedIds: Set<string>;
+  hideInactive: boolean;
   onDragStart: (id: string) => void;
   onDragOver: (id: string, e: React.DragEvent, hasChildren: boolean) => void;
   onDrop: (id: string) => void;
