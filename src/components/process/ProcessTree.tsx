@@ -348,6 +348,8 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
   const isOver = h.drag?.overId === node.id;
   const dropPos = isOver ? h.drag?.position : null;
   const isSelected = h.selectedId === node.id;
+  const isNew = !h.savedIds.has(node.id);
+  const isChanged = h.changedIds.has(node.id);
 
   return (
     <li>
@@ -369,6 +371,7 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
           "group relative flex cursor-pointer items-center gap-1 rounded-lg py-1.5 pr-2 transition-colors",
           "hover:bg-accent/50",
           isSelected && "bg-accent ring-1 ring-primary/40",
+          isChanged && !isSelected && "bg-primary/10 ring-1 ring-primary/30",
           isDragging && "opacity-40",
           dropPos === "inside" && "bg-accent ring-1 ring-primary/40",
         )}
@@ -449,21 +452,29 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
             <IconBtn title="Добавить дочерний" onClick={() => h.addChild(node.id)}>
               <Plus className="size-3.5" />
             </IconBtn>
-            <IconBtn
-              title={node.active ? "Деактивировать" : "Активировать"}
-              onClick={() => h.toggleActive(node.id)}
-            >
-              {node.active ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-            </IconBtn>
+            {isNew ? (
+              <IconBtn title="Удалить" danger onClick={() => h.deleteNode(node.id)}>
+                <Trash2 className="size-3.5" />
+              </IconBtn>
+            ) : (
+              <IconBtn
+                title={node.active ? "Деактивировать" : "Активировать"}
+                onClick={() => h.toggleActive(node.id)}
+              >
+                {node.active ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+              </IconBtn>
+            )}
           </div>
         )}
       </div>
 
       {hasChildren && isOpen && (
         <ul className="flex flex-col">
-          {node.children.map((c) => (
-            <TreeRow key={c.id} node={c} depth={depth + 1} h={h} />
-          ))}
+          {node.children
+            .filter((c) => !h.hideInactive || c.active)
+            .map((c) => (
+              <TreeRow key={c.id} node={c} depth={depth + 1} h={h} />
+            ))}
         </ul>
       )}
     </li>
