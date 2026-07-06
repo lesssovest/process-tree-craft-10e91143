@@ -288,6 +288,15 @@ export function ProcessTree() {
             Свернуть всё
           </Button>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setHideInactive((v) => !v)}
+          className="gap-2"
+        >
+          {hideInactive ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+          {hideInactive ? "Показать неактивные" : "Скрыть неактивные"}
+        </Button>
         <div className="relative min-w-[220px] flex-1">
           <Input
             value={query}
