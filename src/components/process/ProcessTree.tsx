@@ -322,9 +322,11 @@ export function ProcessTree() {
           </div>
         ) : (
           <ul className="flex flex-col">
-            {nodes.map((n) => (
-              <TreeRow key={n.id} node={n} depth={0} h={handlers} />
-            ))}
+            {nodes
+              .filter((n) => !hideInactive || n.active)
+              .map((n) => (
+                <TreeRow key={n.id} node={n} depth={0} h={handlers} />
+              ))}
           </ul>
         )}
       </div>
