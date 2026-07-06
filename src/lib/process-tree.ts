@@ -211,6 +211,35 @@ export function countNodes(nodes: ProcessNode[]): number {
   return nodes.reduce((sum, n) => sum + 1 + countNodes(n.children), 0);
 }
 
+/**
+ * Ids of nodes that were added or modified (name or active state) between the
+ * previously saved tree and the current tree.
+ */
+export function diffChangedIds(
+  oldNodes: ProcessNode[],
+  newNodes: ProcessNode[],
+): Set<string> {
+  const oldMap = new Map<string, ProcessNode>();
+  const build = (list: ProcessNode[]) => {
+    for (const n of list) {
+      oldMap.set(n.id, n);
+      build(n.children);
+    }
+  };
+  build(oldNodes);
+
+  const changed = new Set<string>();
+  const walk = (list: ProcessNode[]) => {
+    for (const n of list) {
+      const prev = oldMap.get(n.id);
+      if (!prev || prev.name !== n.name || prev.active !== n.active) changed.add(n.id);
+      walk(n.children);
+    }
+  };
+  walk(newNodes);
+  return changed;
+}
+
 /** Ids of all nodes matching a query plus the ids of their ancestors. */
 export function searchMatches(
   nodes: ProcessNode[],
