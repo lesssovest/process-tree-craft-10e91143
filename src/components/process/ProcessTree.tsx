@@ -175,6 +175,12 @@ export function ProcessTree() {
     setNodes((prev) => toggleActiveCascade(prev, id));
   };
 
+  const deleteNode = (id: string) => {
+    setNodes((prev) => removeFromTree(prev, id).tree);
+    if (selectedId === id) setSelectedId(null);
+    if (editingId === id) setEditingId(null);
+  };
+
 
   // ---- Drag & drop ----
   const onDragStart = (id: string) => setDrag({ dragId: id, overId: null, position: null });
