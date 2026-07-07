@@ -33,10 +33,19 @@ import {
   makeNode,
   removeFromTree,
   searchMatches,
-  seedProcesses,
   toggleActiveCascade,
   updateTree,
 } from "@/lib/process-tree";
+
+export interface StructureEditorProps {
+  seed: ProcessNode[];
+  /** Linear list: no tree nesting, no drag-and-drop, no child creation. */
+  linear?: boolean;
+  addLabel: string;
+  searchPlaceholder: string;
+  itemPlaceholder: string;
+  countNoun: string;
+}
 
 interface DragState {
   dragId: string;
@@ -45,6 +54,8 @@ interface DragState {
 }
 
 interface RowHandlers {
+  linear: boolean;
+  itemPlaceholder: string;
   expanded: Set<string>;
   editingId: string | null;
   selectedId: string | null;
@@ -69,10 +80,17 @@ interface RowHandlers {
   nodes: ProcessNode[];
 }
 
-export function ProcessTree() {
-  const [nodes, setNodes] = useState<ProcessNode[]>(seedProcesses);
-  const [savedSnapshot, setSavedSnapshot] = useState<string>(() => JSON.stringify(seedProcesses));
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(collectAllIds(seedProcesses)));
+export function StructureEditor({
+  seed,
+  linear = false,
+  addLabel,
+  searchPlaceholder,
+  itemPlaceholder,
+  countNoun,
+}: StructureEditorProps) {
+  const [nodes, setNodes] = useState<ProcessNode[]>(seed);
+  const [savedSnapshot, setSavedSnapshot] = useState<string>(() => JSON.stringify(seed));
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(collectAllIds(seed)));
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -83,8 +101,6 @@ export function ProcessTree() {
 
   const dirty = JSON.stringify(nodes) !== savedSnapshot;
 
-  // Ids present in the last saved snapshot. Nodes not in this set are unsaved
-  // (freshly created) and may be deleted; saved nodes can only be deactivated.
   const savedIds = useMemo(() => {
     try {
       return new Set(collectAllIds(JSON.parse(savedSnapshot) as ProcessNode[]));
@@ -93,7 +109,6 @@ export function ProcessTree() {
     }
   }, [savedSnapshot]);
 
-  // Clear the post-save highlight as soon as the user makes new changes.
   useEffect(() => {
     if (dirty) setChangedIds((prev) => (prev.size ? new Set() : prev));
   }, [dirty]);
@@ -123,7 +138,6 @@ export function ProcessTree() {
 
   const startEdit = (id: string) => setEditingId(id);
   const cancelEdit = () => {
-    // discard an empty freshly-added node
     if (newlyAddedId.current === editingId && editingId) {
       const node = findNode(nodes, editingId);
       if (node && !node.name.trim()) {
@@ -159,7 +173,7 @@ export function ProcessTree() {
   };
 
   const addChild = (parentId: string) => {
-    const depth = depthOf(nodes, parentId); // 0-based
+    const depth = depthOf(nodes, parentId);
     if (depth + 2 > MAX_DEPTH) {
       toast.error(`Достигнута максимальная глубина вложенности (${MAX_DEPTH} уровней)`);
       return;
@@ -181,15 +195,14 @@ export function ProcessTree() {
     if (editingId === id) setEditingId(null);
   };
 
-
-  // ---- Drag & drop ----
+  // ---- Drag & drop (tree mode only) ----
   const onDragStart = (id: string) => setDrag({ dragId: id, overId: null, position: null });
 
-  const onDragOver = (id: string, e: React.DragEvent, hasChildren: boolean) => {
+  const onDragOver = (id: string, e: React.DragEvent, _hasChildren: boolean) => {
     e.preventDefault();
     if (!drag || drag.dragId === id) return;
     const dragged = findNode(nodes, drag.dragId);
-    if (dragged && isDescendant(dragged, id)) return; // can't drop into own subtree
+    if (dragged && isDescendant(dragged, id)) return;
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const y = e.clientY - rect.top;
     const ratio = y / rect.height;
@@ -207,15 +220,13 @@ export function ProcessTree() {
     const target = findNode(nodes, targetId);
     if (!dragged || !target || isDescendant(dragged, targetId)) return void setDrag(null);
 
-    // depth check
-    const targetDepth = depthOf(nodes, targetId); // 0-based
+    const targetDepth = depthOf(nodes, targetId);
     const baseDepth = position === "inside" ? targetDepth + 1 : targetDepth;
     if (baseDepth + heightOf(dragged) > MAX_DEPTH) {
       toast.error(`Достигнута максимальная глубина вложенности (${MAX_DEPTH} уровней)`);
       return void setDrag(null);
     }
 
-    // duplicate check within destination parent
     const destSiblings =
       position === "inside"
         ? target.children
@@ -243,11 +254,13 @@ export function ProcessTree() {
     setSavedSnapshot(JSON.stringify(nodes));
     setChangedIds(changed);
     toast.success("Изменения сохранены", {
-      description: `${countNodes(nodes)} процессов в структуре`,
+      description: `${countNodes(nodes)} ${countNoun} в справочнике`,
     });
   };
 
   const handlers: RowHandlers = {
+    linear,
+    itemPlaceholder,
     expanded: effectiveExpanded,
     editingId,
     selectedId,
@@ -277,17 +290,19 @@ export function ProcessTree() {
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={addRoot} className="gap-2">
-          <Plus className="size-4" /> Добавить корневой процесс
+          <Plus className="size-4" /> {addLabel}
         </Button>
-        <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
-          <Button variant="ghost" size="sm" onClick={expandAll}>
-            Развернуть всё
-          </Button>
-          <div className="h-4 w-px bg-border" />
-          <Button variant="ghost" size="sm" onClick={collapseAll}>
-            Свернуть всё
-          </Button>
-        </div>
+        {!linear && (
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1">
+            <Button variant="ghost" size="sm" onClick={expandAll}>
+              Развернуть всё
+            </Button>
+            <div className="h-4 w-px bg-border" />
+            <Button variant="ghost" size="sm" onClick={collapseAll}>
+              Свернуть всё
+            </Button>
+          </div>
+        )}
         <Button
           variant="outline"
           size="sm"
@@ -301,7 +316,7 @@ export function ProcessTree() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Поиск по названию процесса..."
+            placeholder={searchPlaceholder}
             className="bg-card"
           />
         </div>
@@ -311,13 +326,13 @@ export function ProcessTree() {
         </Button>
       </div>
 
-      {/* Tree card */}
+      {/* List card */}
       <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
         {nodes.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <p className="text-sm text-muted-foreground">Структура процессов пуста</p>
+            <p className="text-sm text-muted-foreground">Справочник пуст</p>
             <Button variant="outline" size="sm" onClick={addRoot} className="gap-2">
-              <Plus className="size-4" /> Добавить первый процесс
+              <Plus className="size-4" /> {addLabel}
             </Button>
           </div>
         ) : (
@@ -332,8 +347,10 @@ export function ProcessTree() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Всего процессов: {countNodes(nodes)} · Максимальная глубина: {MAX_DEPTH} уровней. Перетащите
-        элемент, чтобы изменить порядок или уровень вложенности.
+        Всего: {countNodes(nodes)} {countNoun}.
+        {linear
+          ? " Линейный список — без вложенности."
+          : ` Максимальная глубина: ${MAX_DEPTH} уровней. Перетащите элемент, чтобы изменить порядок или уровень вложенности.`}
       </p>
     </div>
   );
@@ -350,18 +367,21 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
   const isSelected = h.selectedId === node.id;
   const isNew = !h.savedIds.has(node.id);
   const isChanged = h.changedIds.has(node.id);
+  const draggable = !h.linear && !isEditing;
 
   return (
     <li>
       <div
-        draggable={!isEditing}
+        draggable={draggable}
         onClick={() => !isEditing && h.select(node.id)}
         onDragStart={(e) => {
+          if (h.linear) return;
           e.stopPropagation();
           h.onDragStart(node.id);
         }}
-        onDragOver={(e) => h.onDragOver(node.id, e, hasChildren)}
+        onDragOver={(e) => !h.linear && h.onDragOver(node.id, e, hasChildren)}
         onDrop={(e) => {
+          if (h.linear) return;
           e.preventDefault();
           e.stopPropagation();
           h.onDrop(node.id);
@@ -384,8 +404,7 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
           <span className="absolute left-2 right-2 bottom-0 h-0.5 rounded-full bg-primary" />
         )}
 
-        {/* connector / indent guides */}
-        {depth > 0 && (
+        {!h.linear && depth > 0 && (
           <span
             aria-hidden
             className="pointer-events-none absolute top-0 bottom-0 border-l border-border/70"
@@ -393,27 +412,31 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
           />
         )}
 
-        <GripVertical className="size-4 shrink-0 cursor-grab text-muted-foreground/40 opacity-0 group-hover:opacity-100" />
+        {!h.linear && (
+          <GripVertical className="size-4 shrink-0 cursor-grab text-muted-foreground/40 opacity-0 group-hover:opacity-100" />
+        )}
 
-        {/* expander */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (hasChildren) h.toggleExpand(node.id);
-          }}
-          className={cn(
-            "flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground",
-            hasChildren ? "hover:bg-accent hover:text-foreground" : "invisible",
-          )}
-        >
-          {isOpen ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-        </button>
+        {/* expander (tree only) */}
+        {!h.linear && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (hasChildren) h.toggleExpand(node.id);
+            }}
+            className={cn(
+              "flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground",
+              hasChildren ? "hover:bg-accent hover:text-foreground" : "invisible",
+            )}
+          >
+            {isOpen ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+          </button>
+        )}
 
-        {/* name / inline editor */}
         {isEditing ? (
           <InlineEditor
             initial={node.name}
+            placeholder={h.itemPlaceholder}
             onCommit={(v) => h.commitEdit(node.id, v)}
             onCancel={h.cancelEdit}
           />
@@ -423,6 +446,7 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
             onDoubleClick={() => h.startEdit(node.id)}
             className={cn(
               "flex-1 truncate text-left text-sm",
+              h.linear && "pl-1.5",
               node.active ? "text-foreground" : "text-muted-foreground line-through decoration-muted-foreground/40",
               isMatch && "rounded bg-primary/15 px-1 font-medium",
             )}
@@ -438,7 +462,6 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
           </span>
         )}
 
-        {/* actions */}
         {!isEditing && (
           <div
             className={cn(
@@ -449,9 +472,11 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
             <IconBtn title="Редактировать название" onClick={() => h.startEdit(node.id)}>
               <Pencil className="size-3.5" />
             </IconBtn>
-            <IconBtn title="Добавить дочерний" onClick={() => h.addChild(node.id)}>
-              <Plus className="size-3.5" />
-            </IconBtn>
+            {!h.linear && (
+              <IconBtn title="Добавить дочерний" onClick={() => h.addChild(node.id)}>
+                <Plus className="size-3.5" />
+              </IconBtn>
+            )}
             {isNew ? (
               <IconBtn title="Удалить" danger onClick={() => h.deleteNode(node.id)}>
                 <Trash2 className="size-3.5" />
@@ -468,7 +493,7 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
         )}
       </div>
 
-      {hasChildren && isOpen && (
+      {!h.linear && hasChildren && isOpen && (
         <ul className="flex flex-col">
           {node.children
             .filter((c) => !h.hideInactive || c.active)
@@ -513,10 +538,12 @@ function IconBtn({
 
 function InlineEditor({
   initial,
+  placeholder,
   onCommit,
   onCancel,
 }: {
   initial: string;
+  placeholder: string;
   onCommit: (v: string) => void;
   onCancel: () => void;
 }) {
@@ -532,7 +559,7 @@ function InlineEditor({
           if (e.key === "Escape") onCancel();
         }}
         onBlur={() => onCommit(value)}
-        placeholder="Название процесса"
+        placeholder={placeholder}
         className="h-8 flex-1"
       />
       <button

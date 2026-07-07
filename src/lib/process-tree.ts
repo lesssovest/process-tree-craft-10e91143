@@ -309,3 +309,52 @@ export const seedProcesses: ProcessNode[] = [
     ],
   },
 ];
+
+export const seedOrgStructure: ProcessNode[] = [
+  {
+    id: "org_1",
+    name: "Правление",
+    active: true,
+    children: [
+      {
+        id: "org_1_1",
+        name: "Департамент рисков",
+        active: true,
+        children: [
+          { id: "org_1_1_1", name: "Отдел операционных рисков", active: true, children: [] },
+          { id: "org_1_1_2", name: "Отдел кредитных рисков", active: true, children: [] },
+        ],
+      },
+      {
+        id: "org_1_2",
+        name: "ИТ-департамент",
+        active: true,
+        children: [
+          { id: "org_1_2_1", name: "Отдел разработки", active: true, children: [] },
+          { id: "org_1_2_2", name: "Отдел сопровождения", active: true, children: [] },
+          { id: "org_1_2_3", name: "Отдел информационной безопасности", active: false, children: [] },
+        ],
+      },
+    ],
+  },
+  {
+    id: "org_2",
+    name: "Финансовый блок",
+    active: true,
+    children: [
+      { id: "org_2_1", name: "Бухгалтерия", active: true, children: [] },
+      { id: "org_2_2", name: "Казначейство", active: true, children: [] },
+    ],
+  },
+  { id: "org_3", name: "Служба внутреннего аудита", active: true, children: [] },
+];
+
+export const seedItSystems: ProcessNode[] = [
+  { id: "its_1", name: "1С:Предприятие", active: true, children: [] },
+  { id: "its_2", name: "SAP ERP", active: true, children: [] },
+  { id: "its_3", name: "CRM Bitrix24", active: true, children: [] },
+  { id: "its_4", name: "АБС (Автоматизированная банковская система)", active: true, children: [] },
+  { id: "its_5", name: "Система ДБО", active: true, children: [] },
+  { id: "its_6", name: "Active Directory", active: true, children: [] },
+  { id: "its_7", name: "Корпоративный портал", active: false, children: [] },
+];
