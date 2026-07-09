@@ -391,7 +391,6 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
           "group relative flex cursor-pointer items-center gap-1 rounded-lg py-1.5 pr-2 transition-colors",
           "hover:bg-accent/50",
           isSelected && "bg-accent ring-1 ring-primary/40",
-          isChanged && !isSelected && "bg-primary/10 ring-1 ring-primary/30",
           isDragging && "opacity-40",
           dropPos === "inside" && "bg-accent ring-1 ring-primary/40",
         )}
@@ -459,6 +458,12 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
         {!node.active && !isEditing && (
           <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
             Неактивен
+          </span>
+        )}
+
+        {isChanged && !isEditing && (
+          <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+            Изменено
           </span>
         )}
 

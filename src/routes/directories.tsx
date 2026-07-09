@@ -20,14 +20,6 @@ export const Route = createFileRoute("/directories")({
 function DirectoriesPage() {
   return (
     <AppLayout active="knowledge">
-      <nav className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground">
-        <Link to="/" className="hover:text-foreground">
-          База знаний
-        </Link>
-        <ChevronRight className="size-3.5" />
-        <span className="text-foreground">Справочники</span>
-      </nav>
-
       <Link
         to="/"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { AppLayout } from "@/components/AppLayout";
 import { StructureEditor } from "@/components/process/StructureEditor";
@@ -70,21 +70,11 @@ function DirectoryPage() {
 
   return (
     <AppLayout active="knowledge">
-      <nav className="mb-4 flex items-center gap-1.5 text-sm text-muted-foreground">
-        <Link to="/" className="hover:text-foreground">
-          База знаний
-        </Link>
-        <ChevronRight className="size-3.5" />
-        <span className="text-foreground">Справочники</span>
-        <ChevronRight className="size-3.5" />
-        <span className="text-foreground">{cfg.title}</span>
-      </nav>
-
       <Link
-        to="/"
+        to="/directories"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="size-4" /> Назад
+        <ArrowLeft className="size-4" /> Назад к справочникам
       </Link>
 
       <header className="mb-7">
