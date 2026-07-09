@@ -461,6 +461,12 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
           </span>
         )}
 
+        {isChanged && !isEditing && (
+          <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+            Изменено
+          </span>
+        )}
+
         {!isEditing && (
           <div
             className={cn(
