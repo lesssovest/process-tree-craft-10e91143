@@ -7,6 +7,7 @@ import {
   Search,
   Package,
   FolderTree,
+  Plus,
   Sparkles,
 } from "lucide-react";
 
