@@ -8,7 +8,6 @@ import {
   Package,
   FolderTree,
   Plus,
-  ChevronRight,
   Sparkles,
 } from "lucide-react";
 
@@ -108,8 +107,11 @@ export function KnowledgeBase() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {/* Справочники — interactive card */}
-        <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm sm:col-span-2 xl:col-span-1">
+        {/* Справочники — folder card */}
+        <Link
+          to="/directories"
+          className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/40 hover:bg-accent/50"
+        >
           <div className="mb-3 flex items-start justify-between">
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
               <FolderTree className="size-5" />
@@ -121,34 +123,7 @@ export function KnowledgeBase() {
           <p className="text-lg font-semibold text-foreground">
             Справочники <span className="text-muted-foreground">{directories.length}</span>
           </p>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Структуры для регистрации инцидентов
-          </p>
-          <ul className="mt-4 flex flex-col gap-1.5">
-            {directories.map((d) => (
-              <li key={d.id}>
-                <Link
-                  to="/directory/$id"
-                  params={{ id: d.id }}
-                  className="group flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-2.5 transition-colors hover:border-primary/40 hover:bg-accent/50"
-                >
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                    <d.icon className="size-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-foreground">
-                      {d.title}
-                    </span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {d.linear ? "Линейный список" : "Древовидная структура"}
-                    </span>
-                  </span>
-                  <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+        </Link>
 
         {staticCards.map((card) => (
           <div
