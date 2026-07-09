@@ -391,7 +391,6 @@ function TreeRow({ node, depth, h }: { node: ProcessNode; depth: number; h: RowH
           "group relative flex cursor-pointer items-center gap-1 rounded-lg py-1.5 pr-2 transition-colors",
           "hover:bg-accent/50",
           isSelected && "bg-accent ring-1 ring-primary/40",
-          isChanged && !isSelected && "bg-primary/10 ring-1 ring-primary/30",
           isDragging && "opacity-40",
           dropPos === "inside" && "bg-accent ring-1 ring-primary/40",
         )}

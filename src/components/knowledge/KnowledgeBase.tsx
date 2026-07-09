@@ -7,7 +7,6 @@ import {
   Search,
   Package,
   FolderTree,
-  Plus,
   Sparkles,
 } from "lucide-react";
 
@@ -112,13 +111,10 @@ export function KnowledgeBase() {
           to="/directories"
           className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/40 hover:bg-accent/50"
         >
-          <div className="mb-3 flex items-start justify-between">
+          <div className="mb-3 flex items-start">
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
               <FolderTree className="size-5" />
             </div>
-            <span className="flex size-7 items-center justify-center rounded-lg text-muted-foreground">
-              <Plus className="size-4" />
-            </span>
           </div>
           <p className="text-lg font-semibold text-foreground">
             Справочники <span className="text-muted-foreground">{directories.length}</span>
