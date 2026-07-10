@@ -223,36 +223,89 @@ export function diffChangedIds(
   interface Pos {
     node: ProcessNode;
     parentId: string | null;
-    index: number;
   }
+  // Ordered list of child ids per parent (null = root level).
   const index = (list: ProcessNode[]) => {
     const map = new Map<string, Pos>();
+    const childrenByParent = new Map<string | null, string[]>();
     const build = (nodes: ProcessNode[], parentId: string | null) => {
-      nodes.forEach((n, i) => {
-        map.set(n.id, { node: n, parentId, index: i });
+      childrenByParent.set(
+        parentId,
+        nodes.map((n) => n.id),
+      );
+      for (const n of nodes) {
+        map.set(n.id, { node: n, parentId });
         build(n.children, n.id);
-      });
+      }
     };
     build(list, null);
-    return map;
+    return { map, childrenByParent };
   };
-  const oldMap = index(oldNodes);
-  const newMap = index(newNodes);
+  const oldIdx = index(oldNodes);
+  const newIdx = index(newNodes);
 
   const changed = new Set<string>();
-  for (const [id, cur] of newMap) {
-    const prev = oldMap.get(id);
-    if (!prev) continue; // new node — not a "modified" node
+
+  // Name / active / parent changes.
+  for (const [id, cur] of newIdx.map) {
+    const prev = oldIdx.map.get(id);
+    if (!prev) continue; // new node — surfaced separately as an unsaved addition
     if (
       prev.node.name !== cur.node.name ||
       prev.node.active !== cur.node.active ||
-      prev.parentId !== cur.parentId ||
-      prev.index !== cur.index
+      prev.parentId !== cur.parentId
     ) {
       changed.add(id);
     }
   }
+
+  // Reordering within the same parent: mark only nodes that genuinely moved
+  // relative to their siblings (ignore index shifts caused by add/remove/move
+  // of other nodes). Uses the longest common subsequence as the stable set.
+  for (const [parentId, newChildren] of newIdx.childrenByParent) {
+    const oldChildren = oldIdx.childrenByParent.get(parentId) ?? [];
+    // Consider only ids present in both lists AND whose parent is unchanged.
+    const common = newChildren.filter(
+      (id) => oldIdx.map.has(id) && oldIdx.map.get(id)!.parentId === parentId,
+    );
+    if (common.length < 2) continue;
+    const oldOrder = oldChildren.filter((id) => common.includes(id));
+    const oldPos = new Map(oldOrder.map((id, i) => [id, i] as const));
+    const seq = common.map((id) => oldPos.get(id)!);
+    const stable = new Set(longestIncreasingSubsequence(seq).map((i) => common[i]));
+    for (const id of common) {
+      if (!stable.has(id)) changed.add(id);
+    }
+  }
+
   return changed;
+}
+
+/** Returns indexes of one longest strictly-increasing subsequence of `arr`. */
+function longestIncreasingSubsequence(arr: number[]): number[] {
+  const n = arr.length;
+  if (n === 0) return [];
+  const parent = new Array<number>(n).fill(-1);
+  const tails: number[] = []; // tails[k] = index in arr of the smallest tail of an increasing subseq of length k+1
+  for (let i = 0; i < n; i++) {
+    let lo = 0;
+    let hi = tails.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (arr[tails[mid]] < arr[i]) lo = mid + 1;
+      else hi = mid;
+    }
+    if (lo > 0) parent[i] = tails[lo - 1];
+    if (lo === tails.length) tails.push(i);
+    else tails[lo] = i;
+  }
+  const result: number[] = [];
+  let k = tails.length ? tails[tails.length - 1] : -1;
+  while (k !== -1) {
+    result.push(k);
+    k = parent[k];
+  }
+  return result.reverse();
 }
 
 /** Ids of all nodes matching a query plus the ids of their ancestors. */
