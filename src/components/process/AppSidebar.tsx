@@ -21,7 +21,7 @@ const nav = [
   { key: "analytics", label: "Аналитика", icon: BarChart3 },
   { key: "ai", label: "AI мониторинг", icon: Cpu },
   { key: "limits", label: "Лимитная кампания", icon: Target },
-  { key: "knowledge", label: "База знаний", icon: BookOpen, to: "/" as const },
+  { key: "knowledge", label: "База знаний", icon: BookOpen, to: "/directories" as const },
 ];
 
 export function AppSidebar({ active }: { active?: string }) {
