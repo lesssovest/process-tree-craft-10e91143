@@ -96,7 +96,6 @@ export function StructureEditor({
   const [query, setQuery] = useState("");
   const [drag, setDrag] = useState<DragState | null>(null);
   const [hideInactive, setHideInactive] = useState(false);
-  const [changedIds, setChangedIds] = useState<Set<string>>(() => new Set());
   const newlyAddedId = useRef<string | null>(null);
 
   const dirty = JSON.stringify(nodes) !== savedSnapshot;
@@ -109,9 +108,16 @@ export function StructureEditor({
     }
   }, [savedSnapshot]);
 
-  useEffect(() => {
-    if (dirty) setChangedIds((prev) => (prev.size ? new Set() : prev));
-  }, [dirty]);
+  // Ids of nodes modified since the last save (name, active state or position).
+  // Shown as "Изменено" until changes are saved, then cleared automatically.
+  const changedIds = useMemo(() => {
+    if (!dirty) return new Set<string>();
+    try {
+      return diffChangedIds(JSON.parse(savedSnapshot) as ProcessNode[], nodes);
+    } catch {
+      return new Set<string>();
+    }
+  }, [dirty, savedSnapshot, nodes]);
 
   const { matched, searchExpand } = useMemo(() => {
     if (!query.trim()) return { matched: new Set<string>(), searchExpand: new Set<string>() };
@@ -250,9 +256,7 @@ export function StructureEditor({
   const onDragEnd = () => setDrag(null);
 
   const save = () => {
-    const changed = diffChangedIds(JSON.parse(savedSnapshot) as ProcessNode[], nodes);
     setSavedSnapshot(JSON.stringify(nodes));
-    setChangedIds(changed);
     toast.success("Изменения сохранены", {
       description: `${countNodes(nodes)} ${countNoun} в справочнике`,
     });
