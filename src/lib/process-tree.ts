@@ -212,31 +212,46 @@ export function countNodes(nodes: ProcessNode[]): number {
 }
 
 /**
- * Ids of nodes that were added or modified (name or active state) between the
- * previously saved tree and the current tree.
+ * Ids of nodes that were modified (name, active state, or position) between the
+ * previously saved tree and the current tree. Purely-new nodes (absent from the
+ * old tree) are NOT included — they are surfaced separately as unsaved additions.
  */
 export function diffChangedIds(
   oldNodes: ProcessNode[],
   newNodes: ProcessNode[],
 ): Set<string> {
-  const oldMap = new Map<string, ProcessNode>();
-  const build = (list: ProcessNode[]) => {
-    for (const n of list) {
-      oldMap.set(n.id, n);
-      build(n.children);
-    }
+  interface Pos {
+    node: ProcessNode;
+    parentId: string | null;
+    index: number;
+  }
+  const index = (list: ProcessNode[]) => {
+    const map = new Map<string, Pos>();
+    const build = (nodes: ProcessNode[], parentId: string | null) => {
+      nodes.forEach((n, i) => {
+        map.set(n.id, { node: n, parentId, index: i });
+        build(n.children, n.id);
+      });
+    };
+    build(list, null);
+    return map;
   };
-  build(oldNodes);
+  const oldMap = index(oldNodes);
+  const newMap = index(newNodes);
 
   const changed = new Set<string>();
-  const walk = (list: ProcessNode[]) => {
-    for (const n of list) {
-      const prev = oldMap.get(n.id);
-      if (!prev || prev.name !== n.name || prev.active !== n.active) changed.add(n.id);
-      walk(n.children);
+  for (const [id, cur] of newMap) {
+    const prev = oldMap.get(id);
+    if (!prev) continue; // new node — not a "modified" node
+    if (
+      prev.node.name !== cur.node.name ||
+      prev.node.active !== cur.node.active ||
+      prev.parentId !== cur.parentId ||
+      prev.index !== cur.index
+    ) {
+      changed.add(id);
     }
-  };
-  walk(newNodes);
+  }
   return changed;
 }
 
