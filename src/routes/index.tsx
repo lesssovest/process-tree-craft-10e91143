@@ -1,15 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { AppLayout } from "@/components/AppLayout";
-import { KnowledgeBase } from "@/components/knowledge/KnowledgeBase";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
-  component: Index,
+  beforeLoad: () => {
+    throw redirect({ to: "/directories" });
+  },
 });
-
-function Index() {
-  return (
-    <AppLayout active="knowledge">
-      <KnowledgeBase />
-    </AppLayout>
-  );
-}
